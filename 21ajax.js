@@ -7,7 +7,104 @@ xhr.open("post", "example.php", true);
 //其次是以适当的格式创建一个字符串。第14章层级讨论过，POST数据的格式与查询字符串格式相同。
 //如果需要将页面中表单的数据进行序列化，然后再通过XHR发送到服务器，那么就可以使用第14章介绍的serialize()函数来创建这个字符串
 
+//要用到的函数createXHR() serialize(form)
+  function createXHR() {
+    if(typeof XMLHttpRequest != "undefined") {
+      return new XMLHttpRequest();
+    }else if (typeof ActiveXObject != "undefined"){
+      if(typeof arguments.callee.activeXString != "string"){
+        var versions = [ "MSXML2.XMLHttp.6.0", "MSXML.XMLHttp.3.0", "MSXML2.XMLHttp"],
+                        i, len;
+        for(i=0, len=versions.length; i<len; i++){
+          try {
+            new ActiveXObject(version[i]);
+            arguments.callee.activeXString = versions[i]
+            break;
+          }catch(ex){
+            //跳过
+          }
+        }
+      }
+      return new ActiveXObject(arguments.callee.activeXString);
+    } else {
+      throw new Error("NO XHR object available.")
+    }
+  }
+  //表单序列化的代码
+    function serialize(form) {
+      var parts = [],
+      field = null,
+        i,
+        len,
+        j,
+        optLen,
+        option,
+        optValue;
+        for (i=0 , len=form.elements.length;i<len;i++){
+          switch(field.type){
+            case "select-one":
+            case "select-multiple":
+            if (field.name.length) {
+              for (j=0, optLen = field.options.length; j< optLen;j++){
+                option = field.options[j];
+                if(option.selected){
+                  optValue = "";
+                  if (option.hasAttribute) {
+                    optValue = (option.haAttribute("value")?
+                                option.value : option.text );
+                  }else {
+                    optValue = (option.attributes["value"].spectified ?
+                                option.value : option.text);
+                  }
+                  parts.push(encodeURIComponent(field.name) + "=" +
+                             encodeURIComponent(optValue));
+                }
+              }
+            }
+            break;
+            case undefined: //字符集
+            case "file":    //文件输入
+            case "submit":  //提交按钮
+            case "reset":   //重置按钮
+            case "button":  //自定义按钮
+            break;
+            case "radio":   //单选按钮
+            case "checkbox"://复选框
+            if(!field.checked){
+              break;
+            }
+            default:
+              if(field.name.length){
+                parts.push(encodeURIComponent(field.name) + "=" +
+                             encodeURIComponent(field.value));
+              }
+          }
+        }
+      return parts.join("&")
+    }
+    // serialize(form)()
+///
+
+
 function submitData() {
   var xhr = createXHR();
-  
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4){
+      if((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304){
+        alert(xhr.responseText);
+      } else {
+        alert("Request was successful: "+ xhr.status);
+      }
+    }
+  };
+  xhr.open("post", "postexample.php", true);
+  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  var form = document.getElementById("user-info");
+  xhr.send(serialize(form));
 }
+//这个函数可以将ID为user-info的表单中的数据序列化之后发给服务器。而示例PHP就可以通过$_POST取得提交的数据了
+
+
+/////21.2XMLHttpRequest 2级
+//21.2.1 FormData
+//
