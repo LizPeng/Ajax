@@ -140,7 +140,7 @@ function createStreamingClient(url, progress, finished){
   xhr.open("get", url, true);
   xhr.onreadystatechange = function() {
     var result;
-    if(xhr.readyState ==3 ){
+    if(xhr.readyState == 3 ){
       //只取得最新数据并调整计数器
       result = xhr.responseText.substring(received);
       received += result.length;
