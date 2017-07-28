@@ -36,3 +36,11 @@ function throttle(method, context){
     method.call(context);
   },100);
 }
+
+function resizeDiv(){
+  var div = document.getElementById('myDiv')
+  div.style.height = div.offsetWidth +"px";
+}
+window.onresize = function(){
+  throttle(resizeDiv)
+}
